@@ -3,11 +3,11 @@ pipeline {
     agent any
     //常量参数，初始确定后一般不需更改
     environment{
-        // 腾讯云docker仓库配置信息
+        // docker仓库配置信息
         DOCKER_REPOSITORY_TX_USERNAME = credentials('DOCKER_REPOSITORY_TX_USERNAME_CHEDIAN')
         DOCKER_REPOSITORY_TX_PASSWORD = credentials('DOCKER_REPOSITORY_TX_PASSWORD_CHEDIAN')
         // 项目名
-        DOCKER_PROJECT_NAME = 'crs-console-api'
+        DOCKER_PROJECT_NAME = 'learn-jenkins-pipeline'
     }
     options {
         //保持构建的最大个数
@@ -23,7 +23,7 @@ pipeline {
                         body: """
                             <p>${env.TAG_NAME}版本部署成功</p>
                         """,
-                        to: "${env.CRS_BACKEND_EMAILS}",
+                        to: "${env.WPF_BACKEND_EMAILS}",
                         subject: "${env.JOB_NAME}-${env.BUILD_NUMBER}-${env.TAG_NAME}版本部署成功",
                         attachLog: true
                     )
@@ -37,7 +37,7 @@ pipeline {
                     body: """
                         <p>${env.BRANCH_NAME}分支构建失败</p>
                     """,
-                    to: "${env.CRS_BACKEND_EMAILS}",
+                    to: "${env.WPF_BACKEND_EMAILS}",
                     subject: "${env.JOB_NAME}-${env.BUILD_NUMBER}-${env.BRANCH_NAME}分支构建失败",
                     attachLog: true
                 )
@@ -55,7 +55,7 @@ pipeline {
                     body: """
                         <p>${env.BRANCH_NAME}分支构建失败</p>
                     """,
-                    to: "${env.CRS_BACKEND_EMAILS}",
+                    to: "${env.WPF_BACKEND_EMAILS}",
                     subject: "${env.JOB_NAME}-${env.BUILD_NUMBER}-${env.BRANCH_NAME}分支构建失败",
                     attachLog: true
                 )
@@ -79,12 +79,12 @@ pipeline {
                         // 镜像名
                         env.dockerPreImage = env.DOCKER_PROJECT_NAME + '-master'
                         env.dockerImage = env.dockerPreImage + ':' + env.TAG_NAME
-                        env.onlineImage = "${env.DOCKER_REPO}/${env.CRS_DOCKER_TX_NAMESPACE_BACKEND}/${env.dockerPreImage}:${env.TAG_NAME}"
+                        env.onlineImage = "${env.DOCKER_REPO}/${env.WPF_DOCKER_TX_NAMESPACE_BACKEND}/${env.dockerPreImage}:${env.TAG_NAME}"
                     } else {
                         // 镜像名
                         env.dockerPreImage = env.DOCKER_PROJECT_NAME + '-' + env.BRANCH_NAME.split("/").join("-")
                         env.dockerImage = env.dockerPreImage + ':' + env.GIT_COMMIT
-                        env.onlineImage = "${env.DOCKER_REPO}/${env.CRS_DOCKER_TX_NAMESPACE_BACKEND}/${env.dockerPreImage}:${env.GIT_COMMIT}"
+                        env.onlineImage = "${env.DOCKER_REPO}/${env.WPF_DOCKER_TX_NAMESPACE_BACKEND}/${env.dockerPreImage}:${env.GIT_COMMIT}"
                     }
                 }
                 echo "构建准备结束。。。"
@@ -203,7 +203,7 @@ pipeline {
                                 <p>开发组长不通过正式环境部署，请相关开发重新开发部署和自测<p>
                                 <p>需要重新部署在Jenkins Pipeline视图继续执行步骤 <a href='${env.JENKINS_URL}blue/organizations/jenkins/${jobInfo[0]}/detail/${jobInfo[1]}/${env.BUILD_NUMBER}/pipeline'>${env.JOB_NAME}${env.JOB_NAME} (pipeline)</a> ！！！</p>
                                 """,
-                                to: "${env.CRS_BACKEND_EMAILS}",
+                                to: "${env.WPF_BACKEND_EMAILS}",
                                 subject: "${env.JOB_NAME}-${env.BUILD_NUMBER}-开发组长不通过开发完成，请相关开发重新开发部署和自测",
                                 attachLog: true
                             )
@@ -214,12 +214,12 @@ pipeline {
                             env.needDeploy = "Yes"
                         }
 
-                        env.k8sNamespace = 'crs-prod-backend';
+                        env.k8sNamespace = 'WPF-prod-backend';
                     } else if (env.BRANCH_NAME == 'build/dev') {
                         env.k8sNamespace = 'backend';
                         env.needDeploy = "Yes"
                     } else if (env.BRANCH_NAME == 'build/test') {
-                        env.k8sNamespace = 'crs-test-backend';
+                        env.k8sNamespace = 'WPF-test-backend';
                         env.needDeploy = "Yes"
                     } else if (env.BRANCH_NAME == 'build/docs') {
                         env.needDeploy = "Yes"
