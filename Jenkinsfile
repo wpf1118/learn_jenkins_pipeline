@@ -27,24 +27,26 @@ def deply_stage_host(stage, hosts, enterprise_hash, enterprise_name, docker_name
         def ip = hosts[i];
         parallelDeploy["deploy-${stage}-task-${ip}"] = {
             sh """
+                ssh -p 22 root@${ip} "rm -rf /dockerfiles"
+
                 echo "PHP_FPM_IMAGE=${env.DOCKER_REPO}/${docker_namespace}/crs-php-${project}-${run_env}-${image_hash}:${tag}" > dockerfiles/.env
-                
+
                 echo "ENTERPRISE_HASH=${image_hash}" >> dockerfiles/.env
                 echo "PROJECT=${project}" >> dockerfiles/.env
+                echo "RUN_ENV=${run_env}" >> dockerfiles/.env
 
                 scp -r dockerfiles root@${ip}:/
 
-                ssh -p 22 root@${ip} "cd /dockerfiles && sed -i '3s/php-fpm/php-fpm-${project}-${image_hash}/g' docker-compose.yml"
+                ssh -p 22 root@${ip} "cd /dockerfiles && sed -i '3s/php-fpm/php-fpm-${project}-${run_env}-${image_hash}/g' docker-compose.yml"
 
                 ssh -p 22 root@${ip} "chmod +x /dockerfiles/kill-container.sh && /dockerfiles/kill-container.sh ${env.DOCKER_REPO}/${docker_namespace}/crs-php-${project}-${run_env}-${image_hash}"
 
-                ssh -p 22 root@${ip} "mkdir -p /data/www/console-api-crs.vchangyi.com/${image_hash}"
+                ssh -p 22 root@${ip} "mkdir -p /data/www/console-api-test-crs.vchangyi.com/${image_hash}"
 
-                ssh -p 22 root@${ip} "chown -R 1000:1000 /data/www/console-api-crs.vchangyi.com/${image_hash}"
+                ssh -p 22 root@${ip} "chown -R 1000:1000 /data/www/console-api-test-crs.vchangyi.com/${image_hash}"
 
                 ssh -p 22 root@${ip} "cd /dockerfiles && docker-compose up -d"
 
-                ssh -p 22 root@${ip} "rm -rf /dockerfiles"
             """
         }
     }
@@ -56,16 +58,16 @@ node{
 
     String enterprise_hash = ''
     String enterprise_name = ''
-    String docker_namespace = 'crs-backend'
+    String docker_namespace = 'czht1118'
     String project = 'console'
 
     def hostsConf = [
+            "juxiangpro:ecd85280aa135bbd0108dd6aa424565a": [
+                "127.0.0.1",
+            ],
             "default" : [
                 "127.0.0.1",
             ],
-            "juxiangxinxi:79066ecdb52334c1f6eb7795fcffd44e" : [
-                "127.0.0.1",
-            ]
         ];
 
     def enterpriseList = []
@@ -85,9 +87,7 @@ node{
                 sortMode: 'NONE',
                 tagFilter: '*',
                 type: 'PT_BRANCH_TAG'),
-            choice(choices: enterpriseList, description: '''发布企业
-                                                                     default发布分支：master
-                                                                     ''', name: 'enterprise'),
+            choice(choices: enterpriseList, description: '发布企业', name: 'enterprise'),
             string(defaultValue: 'test', description: '运行环境', name: 'run_env', trim: true)
         ])
     ])
@@ -106,27 +106,81 @@ node{
         ])
     }
 
-    stage('deploy Blue') {
-        def tag = version.replaceAll('/','.') + '.' + env.BUILD_NUMBER
-        def hosts = hostsConf[enterprise];
-        def deploy_hosts = hosts_split(hosts)[0];
-        if (deploy_hosts.size() == 0) {
-            println("Skip Stage：Deploy Blue.")
-            return
-        }
+    def tag = version.replaceAll('/','.') + '.' + env.BUILD_NUMBER
 
-        def enterprise_arr = enterprise.split(':');
-        if (enterprise_arr.size() > 1) {
-            enterprise_name = enterprise_arr[0];
-            enterprise_hash = enterprise_arr[1]
-        }
-
-       println("tag ${tag}")
-       println("enterprise ${enterprise}")
-       println("enterprise_hash ${enterprise_hash}")
-
-        // def blue = deply_stage_host('Blue', deploy_hosts, enterprise_hash, enterprise_name);
-        // parallel blue;
+    def enterprise_arr = enterprise.split(':')
+    if (enterprise_arr.size() > 1) {
+        enterprise_name = enterprise_arr[0];
+        enterprise_hash = enterprise_arr[1]
     }
-    
+
+    stage('build image') {
+
+        def image_hash = enterprise_hash
+        if(image_hash=="") {
+            image_hash="public"
+        }
+
+        sh """
+            docker build . -f dockerfiles/Dockerfile -t ${env.DOCKER_REPO}/${docker_namespace}/crs-php-${project}-${run_env}-${image_hash}:${tag} --no-cache
+        """
+    }
+
+    stage('push image') {
+
+        def image_hash = enterprise_hash
+        if(image_hash=="") {
+            image_hash="public"
+        }
+
+        sh """
+            docker login ${env.DOCKER_REPO} --username ${env.DOCKER_USER} --password ${env.DOCKER_PWD}
+            docker push ${env.DOCKER_REPO}/${docker_namespace}/crs-php-${project}-${run_env}-${image_hash}:${tag}
+        """
+    }
+
+    // stage('deploy Blue') {
+    //     def hosts = hostsConf[enterprise]
+    //     def deploy_hosts = hosts_split(hosts)[0]
+    //     if (deploy_hosts.size() == 0) {
+    //         println("Skip Stage：Deploy Blue.")
+    //         return
+    //     }
+
+    //     def blue = deply_stage_host(
+    //         'Blue',
+    //         deploy_hosts,
+    //         enterprise_hash,
+    //         enterprise_name,
+    //         docker_namespace,
+    //         tag,
+    //         run_env,
+    //         project
+    //     );
+
+    //     parallel blue;
+    // }
+
+    // stage('deploy Green') {
+    //     def hosts = hostsConf[enterprise]
+    //     def deploy_hosts = hosts_split(hosts)[1]
+    //     if (deploy_hosts.size() == 0) {
+
+    //         println("Skip Stage：Deploy Green.")
+    //         return
+    //     }
+
+    //     def green = deply_stage_host(
+    //             'Green',
+    //             deploy_hosts,
+    //             enterprise_hash,
+    //             enterprise_name,
+    //             docker_namespace,
+    //             tag,
+    //             run_env,
+    //             project
+    //         );
+
+    //     parallel green;
+    // }
 }
