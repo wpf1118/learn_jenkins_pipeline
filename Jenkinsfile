@@ -106,15 +106,8 @@ node{
         ])
     }
 
-    def tag = version.replaceAll('/','.') + '.' + env.BUILD_NUMBER
-
-    def enterprise_arr = enterprise.split(':')
-    if (enterprise_arr.size() > 1) {
-        enterprise_name = enterprise_arr[0];
-        enterprise_hash = enterprise_arr[1]
-    }
-
     stage('deploy Blue') {
+        def tag = version.replaceAll('/','.') + '.' + env.BUILD_NUMBER
         def hosts = hostsConf[enterprise];
         def deploy_hosts = hosts_split(hosts)[0];
         if (deploy_hosts.size() == 0) {
@@ -128,6 +121,7 @@ node{
             enterprise_hash = enterprise_arr[1]
         }
 
+       println("tag ${tag}")
        println("enterprise_name ${enterprise_name}")
        println("enterprise_hash ${enterprise_hash}")
 
