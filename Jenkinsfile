@@ -134,8 +134,8 @@ node{
         }
 
         sh """
-            docker login ${env.DOCKER_REPO} --username ${env.DOCKER_USER} --password ${env.DOCKER_PWD}
-            docker push ${env.DOCKER_REPO}/${docker_namespace}/crs-php-${project}-${run_env}-${image_hash}:${tag}
+            docker login --username ${env.DOCKER_USER} --password ${env.DOCKER_PWD}
+            docker push docker push czht1118/crs_shop:${tag}
         """
     }
 
