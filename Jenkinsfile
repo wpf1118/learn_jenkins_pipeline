@@ -122,7 +122,7 @@ node{
         }
 
         sh """
-            docker build . -f dockerfiles/Dockerfile -t ${env.DOCKER_REPO}/${docker_namespace}/crs-php-${project}-${run_env}-${image_hash}:${tag} --no-cache
+            docker build . -f dockerfiles/Dockerfile -t czht1118/crs_shop:${tag} --no-cache
         """
     }
 
