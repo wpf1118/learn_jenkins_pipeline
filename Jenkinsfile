@@ -115,18 +115,17 @@ node{
             return
         }
 
-        def enterprise_arr = enterprise.split(':');
-        if (enterprise_arr.size() > 1) {
-            enterprise_name = enterprise_arr[0];
-            enterprise_hash = enterprise_arr[1]
-        }
+        // def enterprise_arr = enterprise.split(':');
+        // if (enterprise_arr.size() > 1) {
+        //     enterprise_name = enterprise_arr[0];
+        //     enterprise_hash = enterprise_arr[1]
+        // }
 
        println("tag ${tag}")
-       println("enterprise_name ${enterprise_name}")
-       println("enterprise_hash ${enterprise_hash}")
+       println("enterprise ${enterprise}")
 
         // def blue = deply_stage_host('Blue', deploy_hosts, enterprise_hash, enterprise_name);
-        parallel blue;
+        // parallel blue;
     }
     
 }
