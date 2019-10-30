@@ -1,4 +1,4 @@
-FROM ccr.ccs.tencentyun.com/crs-backend/crs-php-fpm-mods:1.0
+FROM nginx
 
 COPY src /data/www
 
