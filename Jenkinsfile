@@ -135,7 +135,7 @@ node{
 
         sh """
             docker login --username ${env.DOCKER_USER} --password ${env.DOCKER_PWD}
-            docker push docker push czht1118/crs_shop:${tag}
+            docker push czht1118/crs_shop:${tag}
         """
     }
 
